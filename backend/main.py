@@ -43,7 +43,7 @@ HAS_STATIC = os.path.exists(STATIC_DIR) and os.path.isdir(STATIC_DIR)
 # CORS: restrict origins in production, allow all in development
 ALLOWED_ORIGINS = os.environ.get(
     "ALLOWED_ORIGINS",
-    "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173"
+    "http://localhost:3000,http://localhost:3001,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:3001,http://127.0.0.1:5173"
 ).split(",")
 
 app.add_middleware(

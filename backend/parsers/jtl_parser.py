@@ -103,22 +103,26 @@ class JTLParser(BaseParser):
         )
         
         submitted_qty = ""
+        submitted_rate = ""
         dlt_qty = ""
-        
+
         if dlt_match:
             submitted_qty = dlt_match.group(2).replace(",", "").split(".")[0]
+            submitted_rate = dlt_match.group(3)
             dlt_qty = submitted_qty
-        
+
         # Extract BSS SERVICE CHARGE (Delivered Qty)
         bss_match = re.search(
             r"BSS\s*SERVICE\s*CHARGE\s+(\d+)\s+([\d,]+\.?\d*)\s+([\d.]+)\s+([\d,]+\.?\d*)",
             text,
             re.IGNORECASE
         )
-        
+
         delivered_qty = ""
+        delivered_rate = ""
         if bss_match:
             delivered_qty = bss_match.group(2).replace(",", "").split(".")[0]
+            delivered_rate = bss_match.group(3)
         
         # Extract Total Taxable Value (Amount before tax)
         amount = self.extract_field(
@@ -173,10 +177,10 @@ class JTLParser(BaseParser):
             "gst_tds_applicable": "No",
             "ledger_name": ledger_name,
             "submitted_qty": submitted_qty,
-            "submitted_rate": "",
+            "submitted_rate": submitted_rate,
             "dlt_qty": dlt_qty,
             "delivered_qty": delivered_qty,
-            "delivered_rate": "",
+            "delivered_rate": delivered_rate,
             "amount": amount,
             "cgst": cgst,
             "sgst": sgst,

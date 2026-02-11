@@ -312,9 +312,17 @@ class TestJTLParser:
         result = self.parser.parse(JTL_SAMPLE_TEXT, "test.pdf")
         assert result["submitted_qty"] == "50000"
 
+    def test_submitted_rate_from_dlt(self):
+        result = self.parser.parse(JTL_SAMPLE_TEXT, "test.pdf")
+        assert result["submitted_rate"] == "0.020000"
+
     def test_delivered_qty_from_bss(self):
         result = self.parser.parse(JTL_SAMPLE_TEXT, "test.pdf")
         assert result["delivered_qty"] == "250000"
+
+    def test_delivered_rate_from_bss(self):
+        result = self.parser.parse(JTL_SAMPLE_TEXT, "test.pdf")
+        assert result["delivered_rate"] == "0.080000"
 
     def test_amount(self):
         result = self.parser.parse(JTL_SAMPLE_TEXT, "test.pdf")
