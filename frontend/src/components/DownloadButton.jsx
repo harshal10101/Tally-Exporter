@@ -1,13 +1,23 @@
-function DownloadButton({ onClick, disabled }) {
+function DownloadButton({ onDownloadExcel, onDownloadCsv, disabled }) {
     return (
-        <button
-            className="btn btn-success"
-            onClick={onClick}
-            disabled={disabled}
-        >
-            <span>📥</span>
-            <span>Download Excel for Tally</span>
-        </button>
+        <div className="download-buttons">
+            <button
+                className="btn btn-success"
+                onClick={onDownloadExcel}
+                disabled={disabled}
+            >
+                <span>📥</span>
+                <span>Download Excel</span>
+            </button>
+            <button
+                className="btn btn-secondary"
+                onClick={onDownloadCsv}
+                disabled={disabled}
+            >
+                <span>📄</span>
+                <span>Download CSV</span>
+            </button>
+        </div>
     )
 }
 

@@ -69,7 +69,7 @@ function App() {
         }
     }
 
-    const handleDownload = async () => {
+    const downloadFile = async (endpoint, filename) => {
         if (files.length === 0) {
             setError('No files to export')
             return
@@ -84,7 +84,7 @@ function App() {
                 formData.append('files', file)
             })
 
-            const response = await fetch(`${API_BASE}/api/export`, {
+            const response = await fetch(`${API_BASE}${endpoint}`, {
                 method: 'POST',
                 body: formData
             })
@@ -94,12 +94,11 @@ function App() {
                 throw new Error(errorData.detail || `Export failed: ${response.statusText}`)
             }
 
-            // Download the Excel file
             const blob = await response.blob()
             const url = window.URL.createObjectURL(blob)
             const a = document.createElement('a')
             a.href = url
-            a.download = `tally_import_${new Date().toISOString().split('T')[0]}.xlsx`
+            a.download = filename
             document.body.appendChild(a)
             a.click()
             window.URL.revokeObjectURL(url)
@@ -109,6 +108,16 @@ function App() {
         } finally {
             setLoading(false)
         }
+    }
+
+    const handleDownloadExcel = () => {
+        const date = new Date().toISOString().split('T')[0]
+        downloadFile('/api/export', `tally_import_${date}.xlsx`)
+    }
+
+    const handleDownloadCsv = () => {
+        const date = new Date().toISOString().split('T')[0]
+        downloadFile('/api/export-csv', `tally_import_${date}.csv`)
     }
 
     return (
@@ -122,7 +131,7 @@ function App() {
                             <p>CloudXP • RJIL • JTL → Tally Export</p>
                         </div>
                     </div>
-                    <span className="header-badge">v1.0</span>
+                    <span className="header-badge">v1.1</span>
                 </div>
             </header>
 
@@ -184,7 +193,8 @@ function App() {
                                     </span>
                                 </div>
                                 <DownloadButton
-                                    onClick={handleDownload}
+                                    onDownloadExcel={handleDownloadExcel}
+                                    onDownloadCsv={handleDownloadCsv}
                                     disabled={loading}
                                 />
                             </div>

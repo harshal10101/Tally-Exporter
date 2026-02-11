@@ -355,6 +355,12 @@ body {
   filter: brightness(1.1);
 }
 
+.download-buttons {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
 .action-buttons {
   display: flex;
   justify-content: center;
