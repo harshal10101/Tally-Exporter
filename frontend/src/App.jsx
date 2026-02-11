@@ -3,8 +3,8 @@ import FileUpload from './components/FileUpload'
 import ResultsTable from './components/ResultsTable'
 import DownloadButton from './components/DownloadButton'
 
-// API base URL - use relative for production (proxied), absolute for development
-const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:8000'
+// API base URL - always use relative URLs so Vite proxy (dev) and Nginx (prod) handle routing
+const API_BASE = ''
 
 function App() {
     const [files, setFiles] = useState([])
