@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Data Extractor - Tally Export</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        
+        /* Header */
+        header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 0;
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .logo h1 {
+            font-size: 1.25rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .logo p { font-size: 0.75rem; color: var(--text-secondary); }
+        
+        /* Main */
+        main { padding: 40px 0; }
+        
+        /* Upload Zone */
+        .upload-zone {
+            background: var(--bg-card);
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 60px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .upload-zone:hover, .upload-zone.drag-over {
+            border-color: var(--primary);
+            box-shadow: 0 0 40px rgba(102, 126, 234, 0.2);
+        }
+        
+        .upload-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        
+        .upload-zone h2 { font-size: 1.5rem; margin-bottom: 8px; }
+        .upload-zone p { color: var(--text-secondary); margin-bottom: 20px; }
+        
+        .badges { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+        .badge {
+            background: var(--bg-dark);
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        /* File List */
+        .file-list { display: grid; gap: 8px; margin-bottom: 20px; }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-dark);
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        
+        .file-info { display: flex; align-items: center; gap: 12px; }
+        
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            background: #fee2e2;
+            color: #ef4444;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.75rem;
+        }
+        
+        .file-name { font-weight: 500; }
+        .file-size { font-size: 0.75rem; color: var(--text-secondary); }
+        
+        .file-remove {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .file-remove:hover { background: #fee2e2; color: var(--error); }
+        
+        /* Buttons */
+        .action-buttons { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-success { background: var(--success); color: white; }
+        
+        /* Status */
+        .status { text-align: center; padding: 40px; }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .error {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .success {
+            background: #d1fae5;
+            color: #047857;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        /* Results Table */
+        .results-section { margin-top: 40px; }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .section-title { display: flex; align-items: center; gap: 12px; }
+        .section-title h2 { font-size: 1.5rem; }
+        
+        .count-badge {
+            background: var(--success);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .table-wrapper {
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .table-scroll { overflow-x: auto; max-height: 400px; overflow-y: auto; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            white-space: nowrap;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th {
+            background: var(--bg-dark);
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            position: sticky;
+            top: 0;
+        }
+        
+        tr:hover td { background: rgba(255,255,255,0.02); }
+        
+        .type-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.625rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .type-badge.cloudxp { background: #dbeafe; color: #1d4ed8; }
+        .type-badge.rjil { background: #fce7f3; color: #be185d; }
+        .type-badge.jtl { background: #dcfce7; color: #15803d; }
+        
+        /* Footer */
+        footer {
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            padding: 20px 0;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        footer a { color: var(--primary); text-decoration: none; }
+        
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <div class="logo-icon">📄</div>
+                <div>
+                    <h1>Invoice Data Extractor</h1>
+                    <p>CloudXP • RJIL • JTL → Tally Export</p>
+                </div>
+            </div>
+            <span class="badge" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 6px 16px;">v1.0</span>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <!-- Upload Zone -->
+            <div class="upload-zone" id="uploadZone">
+                <input type="file" id="fileInput" accept=".pdf" multiple style="display: none;">
+                <div class="upload-icon">📁</div>
+                <h2>Upload Invoice PDFs</h2>
+                <p>Drag & drop your invoice files here, or click to browse</p>
+                <div class="badges">
+                    <span class="badge">CloudXP Invoices</span>
+                    <span class="badge">RJIL Invoices</span>
+                    <span class="badge">JTL Invoices</span>
+                </div>
+            </div>
+
+            <!-- File List -->
+            <div class="file-list" id="fileList"></div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons hidden" id="actionButtons">
+                <button class="btn btn-primary" id="extractBtn">🔍 Extract Data</button>
+                <button class="btn btn-secondary" id="clearBtn">🗑️ Clear All</button>
+            </div>
+
+            <!-- Status -->
+            <div id="statusArea"></div>
+
+            <!-- Results -->
+            <section class="results-section hidden" id="resultsSection">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h2>📊 Extracted Data</h2>
+                        <span class="count-badge" id="countBadge">0 invoices</span>
+                    </div>
+                    <button class="btn btn-success" id="downloadBtn">📥 Download Excel for Tally</button>
+                </div>
+                <div class="table-wrapper">
+                    <div class="table-scroll">
+                        <table id="resultsTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Type</th>
+                                    <th>Invoice No</th>
+                                    <th>Date</th>
+                                    <th>Party/Customer</th>
+                                    <th>State</th>
+                                    <th>Period From</th>
+                                    <th>Period To</th>
+                                    <th>Frequency</th>
+                                    <th>Submitted Qty</th>
+                                    <th>Delivered Qty</th>
+                                    <th>Amount</th>
+                                    <th>CGST</th>
+                                    <th>SGST</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>Invoice Data Extractor for Tally • Built by <a href="#">Harshal S. Badgujar</a></p>
+        </div>
+    </footer>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let selectedFiles = [];
+
+        // Elements
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const actionButtons = document.getElementById('actionButtons');
+        const extractBtn = document.getElementById('extractBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const statusArea = document.getElementById('statusArea');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsBody = document.getElementById('resultsBody');
+        const countBadge = document.getElementById('countBadge');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // Upload Zone Events
+        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+        uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            const files = Array.from(e.dataTransfer.files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+            addFiles(files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+            addFiles(files);
+            e.target.value = '';
+        });
+
+        function addFiles(files) {
+            selectedFiles = [...selectedFiles, ...files];
+            renderFileList();
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            renderFileList();
+        }
+
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function renderFileList() {
+            fileList.innerHTML = selectedFiles.map((file, i) => `
+                <div class="file-item">
+                    <div class="file-info">
+                        <div class="file-icon">PDF</div>
+                        <div>
+                            <div class="file-name">${file.name}</div>
+                            <div class="file-size">${formatSize(file.size)}</div>
+                        </div>
+                    </div>
+                    <button class="file-remove" onclick="removeFile(${i})">✕</button>
+                </div>
+            `).join('');
+
+            actionButtons.classList.toggle('hidden', selectedFiles.length === 0);
+        }
+
+        clearBtn.addEventListener('click', () => {
+            selectedFiles = [];
+            renderFileList();
+            resultsSection.classList.add('hidden');
+            statusArea.innerHTML = '';
+        });
+
+        extractBtn.addEventListener('click', async () => {
+            if (selectedFiles.length === 0) {
+                statusArea.innerHTML = '<div class="error">⚠️ Please select at least one PDF file</div>';
+                return;
+            }
+
+            statusArea.innerHTML = '<div class="status"><div class="spinner"></div><p>Processing invoices...</p></div>';
+            extractBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                selectedFiles.forEach(file => formData.append('files', file));
+
+                const response = await fetch(`${API_BASE}/api/process`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Processing failed');
+
+                const data = await response.json();
+                
+                if (data.data && data.data.length > 0) {
+                    displayResults(data);
+                    statusArea.innerHTML = data.errors > 0 
+                        ? `<div class="error">⚠️ ${data.errors} file(s) had errors</div>` 
+                        : '';
+                } else {
+                    statusArea.innerHTML = '<div class="error">⚠️ No data could be extracted</div>';
+                }
+            } catch (err) {
+                statusArea.innerHTML = `<div class="error">⚠️ ${err.message}. Make sure the backend server is running.</div>`;
+            } finally {
+                extractBtn.disabled = false;
+            }
+        });
+
+        function formatAmount(value) {
+            const num = parseFloat(value);
+            if (isNaN(num)) return '-';
+            return '₹ ' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatQty(value) {
+            const num = parseFloat(value);
+            if (isNaN(num)) return '-';
+            return num.toLocaleString('en-IN');
+        }
+
+        function displayResults(data) {
+            countBadge.textContent = `${data.processed} invoice${data.processed !== 1 ? 's' : ''}`;
+            
+            resultsBody.innerHTML = data.data.map((row, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><span class="type-badge ${row.invoice_type}">${row.invoice_type?.toUpperCase() || 'N/A'}</span></td>
+                    <td>${row.invoice_no || '-'}</td>
+                    <td>${row.invoice_date || '-'}</td>
+                    <td>${row.party_customer || '-'}</td>
+                    <td>${row.gst_state || '-'}</td>
+                    <td>${row.invoice_period_from || '-'}</td>
+                    <td>${row.invoice_period_to || '-'}</td>
+                    <td>${row.billing_frequency || '-'}</td>
+                    <td>${formatQty(row.submitted_qty)}</td>
+                    <td>${formatQty(row.delivered_qty)}</td>
+                    <td>${formatAmount(row.amount)}</td>
+                    <td>${formatAmount(row.cgst)}</td>
+                    <td>${formatAmount(row.sgst)}</td>
+                    <td>${formatAmount(row.total_amount)}</td>
+                </tr>
+            `).join('');
+
+            resultsSection.classList.remove('hidden');
+        }
+
+        downloadBtn.addEventListener('click', async () => {
+            if (selectedFiles.length === 0) {
+                statusArea.innerHTML = '<div class="error">⚠️ No files to export</div>';
+                return;
+            }
+
+            statusArea.innerHTML = '<div class="status"><div class="spinner"></div><p>Generating Excel file...</p></div>';
+            downloadBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                selectedFiles.forEach(file => formData.append('files', file));
+
+                const response = await fetch(`${API_BASE}/api/export`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Export failed');
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `tally_import_${new Date().toISOString().split('T')[0]}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                statusArea.innerHTML = '<div class="success">✅ Excel file downloaded successfully!</div>';
+            } catch (err) {
+                statusArea.innerHTML = `<div class="error">⚠️ ${err.message}</div>`;
+            } finally {
+                downloadBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
